@@ -80,6 +80,10 @@ MODULE_SKILLS = (
     "bmad-loop-sweep",
     "bmad-loop-setup",
     "bmod-bmad-loop",
+    # bmad-devin: headless (no-human) escalation resolver, driven by the autopilot.
+    "bmad-devin-autoresolve",
+    # bmad-devin: story intake (`bmad-loop assign`).
+    "bmad-devin-intake",
 )
 
 # Which upstream install ships the skills the base-skill findings require, in both

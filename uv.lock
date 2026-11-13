@@ -1,5 +1,5 @@
 version = 1
-revision = 5
+revision = 3
 requires-python = ">=3.11"
 
 [[package]]
@@ -23,6 +23,7 @@ dependencies = [
     { name = "psutil", marker = "sys_platform == 'win32'" },
     { name = "pyyaml" },
     { name = "regex" },
+    { name = "tomlkit" },
     { name = "tzdata", marker = "sys_platform == 'win32'" },
 ]
 
@@ -60,6 +61,7 @@ requires-dist = [
     { name = "regex", specifier = ">=2024.11.6" },
     { name = "rich", marker = "extra == 'tui'", specifier = ">=14.2" },
     { name = "textual", marker = "extra == 'tui'", specifier = ">=8.0,<9" },
+    { name = "tomlkit", specifier = ">=0.13" },
     { name = "tomlkit", marker = "extra == 'tui'", specifier = ">=0.13" },
     { name = "tzdata", marker = "sys_platform == 'win32'", specifier = ">=2026.5" },
 ]

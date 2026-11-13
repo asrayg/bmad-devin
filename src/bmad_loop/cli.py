@@ -11605,6 +11605,12 @@ def main(argv: list[str] | None = None) -> int:
     list_p = add("list", cmd_list, "list runs/sweeps with their short ref", aliases=["ls"])
     machine.add_json_flag(list_p, "run listing")
 
+    # bmad-devin: autopilot + story intake (src/bmad_loop/autopilot.py, intake.py).
+    from . import autopilot as _autopilot, intake as _intake
+
+    _autopilot.add_parser(add)
+    _intake.add_parser(add)
+
     status_p = add("status", cmd_status, "show run + sprint state")
     status_p.add_argument("run_id", nargs="?")
     machine.add_json_flag(status_p, "run state")

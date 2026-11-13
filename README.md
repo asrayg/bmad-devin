@@ -1,3 +1,7 @@
+> **This is bmad-devin**, a fork of bmad-loop that runs with no human input: assign stories and get commits, with no questions asked.
+> It adds an **autopilot** (auto-resolves escalations with ADRs, auto-approves gates), **OpenSpec** change proposals as each story's contract,
+> and a **Pullo** consensus-review gate before every commit. Start here: [docs/bmad-devin.md](docs/bmad-devin.md).
+
 # bmad-loop
 
 <div align="center">

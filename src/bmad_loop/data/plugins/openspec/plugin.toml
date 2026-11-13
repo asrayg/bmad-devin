@@ -1,0 +1,38 @@
+# bmad-devin: OpenSpec spec-driven contract for every story.
+#
+#   pre_dev_session     → dev prompt gains the OpenSpec contract: read (or create)
+#                         openspec/changes/<story-key>/, implement against its
+#                         scenarios, tick tasks.md, keep `openspec validate` green.
+#   pre_review_session  → review prompt checks every scenario has a test.
+#   pre_commit          → `openspec archive <story-key> --yes`, so the spec delta
+#                         merges into openspec/specs/ inside the story's own commit.
+#
+# Opt in:   [plugins] enabled = ["openspec"]
+# Needs:    the `openspec` CLI on PATH (npm i -g @fission-ai/openspec) — without it
+#           the prompts still apply and archiving is skipped with a journal note.
+
+[plugin]
+name = "openspec"
+version = "0.1.0"
+api_version = 1
+description = "OpenSpec change proposal per story: the spec delta is the dev/review contract and is archived in the story's commit."
+author = "bmad-devin"
+seed_globs = ["openspec/**"]
+
+[python]
+module = "openspec_plugin.py"
+class = "OpenSpecPlugin"
+
+[[settings]]
+key = "archive_on_commit"
+type = "bool"
+default = true
+label = "archive on commit"
+help = "Run `openspec archive <story> --yes` before the story commits."
+
+[[settings]]
+key = "require_cli"
+type = "bool"
+default = false
+label = "require openspec CLI"
+help = "Refuse to start when the `openspec` CLI is not on PATH."

@@ -1,0 +1,65 @@
+# bmad-devin: Pullo consensus review as a blocking pre-commit gate.
+#
+# Pullo (https://github.com/arj873/Pullo) is a read-only reviewer: one Opus review,
+# kept only where two independent Sonnet "witnesses" raise the same defect. That
+# high-precision list is exactly what an unattended loop should act on.
+#
+#   pre_commit_gate  → a dev session runs `pullo_gate.py <story>` on the exact tree
+#                      about to commit, fixes every confirmed finding, re-runs the
+#                      tests, and re-runs Pullo (max `rounds`).
+#
+# Pullo is NOT bundled (no license). Install its skill first:
+#   git clone https://github.com/arj873/Pullo && cp -r Pullo/integrations/claude-code/skills/pullo-review ~/.claude/skills/
+# or set PULLO_REVIEW_SCRIPT=/path/to/pullo_review.py.
+#
+# Opt in:   [plugins] enabled = ["pullo"]
+
+[plugin]
+name = "pullo"
+version = "0.1.0"
+api_version = 1
+description = "Pullo consensus code review on every story's diff; confirmed findings are fixed before commit."
+author = "bmad-devin"
+
+[python]
+module = "pullo_plugin.py"
+class = "PulloPlugin"
+
+[workflows.pullo]
+stage = "pre_commit_gate"
+role = "dev"
+blocking = true
+prompt = """Pullo review gate for story {story_key}. No human is present — never ask questions.
+1. From the repository root run: python3 -I "{scripts}/pullo_gate.py" {story_key}
+   It prints the path of a markdown review (or PULLO_EMPTY when there is nothing to review).
+   If it prints PULLO_MISSING or PULLO_FAILED, write that line into
+   _bmad-output/autopilot/pullo/{story_key}.md and finish (the gate is advisory then).
+2. Read every comment in the review. Each names a file, a line and a concrete defect that
+   two independent reviewers confirmed. Fix each one with the smallest correct change.
+   If you are certain a comment is wrong, do not change code; record why instead.
+3. Run the project's tests and keep them green.
+4. Re-run step 1 at most two more times until it reports no comments.
+5. Append a '## Disposition' section to _bmad-output/autopilot/pullo/{story_key}.md:
+   one line per comment — fixed (how) or rejected (why).
+Do not commit; the orchestrator commits after this gate."""
+
+[[settings]]
+key = "pullo_enabled"
+type = "bool"
+default = true
+label = "Pullo gate"
+help = "Run the Pullo review + fix session before every story commit."
+
+[[settings]]
+key = "pullo_blocking"
+type = "bool"
+default = true
+label = "Pullo gate blocking"
+help = "Defer the story when the Pullo session does not complete."
+
+[[settings]]
+key = "require_pullo"
+type = "bool"
+default = false
+label = "require Pullo installed"
+help = "Refuse to start when pullo_review.py cannot be found."

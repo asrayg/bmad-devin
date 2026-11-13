@@ -742,6 +742,8 @@ def run_session(
     # would still look like it produced a resolution.
     marker = resolution_path(run_dir, story_key)
     marker.unlink(missing_ok=True)
+    if autopilot_enabled():
+        return _run_headless_session(project, run_dir, story_key, model=model)
     argv = adapter.interactive_argv(spec)
     env = {**os.environ, **adapter.interactive_env(spec)}
     subprocess.run(argv, cwd=str(project), env=env)  # attached, inherited stdio
@@ -787,3 +789,46 @@ def run_epic_close_session(
     argv = adapter.interactive_argv(spec)
     env = {**os.environ, **adapter.interactive_env(spec)}
     return subprocess.run(argv, cwd=str(project), env=env).returncode  # attached, inherited stdio
+
+
+# --- bmad-devin autopilot: headless (no-human) escalation resolution -----------
+#
+# With BMAD_DEVIN_AUTOPILOT=1 the resolve session runs headless: the
+# `bmad-devin-autoresolve` skill decides the ambiguity itself (as the BMAD
+# architect would), records the call as an ADR, edits the frozen spec and writes
+# the same `resolution.json` marker the interactive skill writes. Everything
+# downstream (re-arm, watermark, resume) is unchanged.
+
+AUTOPILOT_ENV = "BMAD_DEVIN_AUTOPILOT"
+HEADLESS_CMD_ENV = "BMAD_DEVIN_HEADLESS_CMD"
+DEFAULT_HEADLESS_CMD = "claude -p --permission-mode bypassPermissions"
+AUTORESOLVE_SKILL = "bmad-devin-autoresolve"
+
+
+def autopilot_enabled() -> bool:
+    return os.environ.get(AUTOPILOT_ENV, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def headless_argv(prompt: str, *, model: str = "") -> list[str]:
+    """The no-human CLI invocation: `$BMAD_DEVIN_HEADLESS_CMD` (shlex) + prompt."""
+    import shlex
+
+    argv = shlex.split(os.environ.get(HEADLESS_CMD_ENV) or DEFAULT_HEADLESS_CMD)
+    if model and argv and Path(argv[0]).name == "claude" and "--model" not in argv:
+        argv += ["--model", model]
+    return [*argv, prompt]
+
+
+def _run_headless_session(project: Path, run_dir: Path, story_key: str, *, model: str = "") -> bool:
+    env = {
+        **os.environ,
+        # A headless session IS an automated one: the never-ask rules apply.
+        "BMAD_LOOP_MODE": "autopilot",
+        "BMAD_LOOP_RUN_DIR": str(run_dir),
+        "BMAD_LOOP_STORY_KEY": story_key,
+        "BMAD_LOOP_RESOLVE_CONTEXT": str(context_path(run_dir, story_key)),
+    }
+    argv = headless_argv(f"/{AUTORESOLVE_SKILL} {story_key}", model=model)
+    print(f"autopilot: resolving {story_key} headless ({argv[0]})…")
+    subprocess.run(argv, cwd=str(project), env=env, stdin=subprocess.DEVNULL)
+    return resolution_path(run_dir, story_key).is_file()
