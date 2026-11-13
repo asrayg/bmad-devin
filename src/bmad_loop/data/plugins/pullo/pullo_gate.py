@@ -25,7 +25,11 @@ DEFAULT_SCRIPT = Path.home() / ".claude" / "skills" / "pullo-review" / "scripts"
 
 
 def git(*args: str, env: dict | None = None) -> str:
-    return subprocess.run(["git", *args], check=True, capture_output=True, text=True, env=env).stdout.strip()
+    # LC_ALL=C + a timeout, mirroring bmad_loop.verify._run_git (not importable here).
+    env = {**(env or os.environ), "LC_ALL": "C"}
+    return subprocess.run(
+        ["git", *args], check=True, capture_output=True, text=True, env=env, timeout=120
+    ).stdout.strip()
 
 
 def snapshot(key: str) -> str:

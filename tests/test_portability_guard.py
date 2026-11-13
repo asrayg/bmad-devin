@@ -92,6 +92,12 @@ TMUX_BACKENDS = {"adapters/tmux_base.py", "adapters/tmux_backend.py"}
 # TUI checkpoint modal, and a probe ignoring `limits.git_timeout_s`.
 GIT_CHOKEPOINT = {"verify.py"}
 
+# bmad-devin: plugin helper scripts an AGENT session runs as `python3 -I <script>`
+# from the plugin dir. They execute outside the orchestrator's interpreter and
+# venv, so `bmad_loop.verify` is not importable there; they are not engine code
+# paths and the engine-configured git timeout does not apply to them.
+STANDALONE_PLUGIN_SCRIPTS = {"data/plugins/pullo/pullo_gate.py"}
+
 # The deferred-work ledger-read contract (DW-146), as a chokepoint. Every read of
 # the ledger in `src/bmad_loop` must name its arm — `deferredwork.read_for_write`
 # (repair/write) or `deferredwork.read_for_observation` (observation) — so the
@@ -4885,6 +4891,7 @@ def _git_offenders(findings) -> list[tuple[str, int, str]]:
         (rel, ln, txt)
         for _, rel, ln, txt, feeds_chokepoint in findings
         if not (rel in GIT_CHOKEPOINT and feeds_chokepoint)
+        and rel not in STANDALONE_PLUGIN_SCRIPTS
     ]
 
 
